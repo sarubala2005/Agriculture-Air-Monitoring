@@ -1,0 +1,102 @@
+This project simulates an air quality monitoring system for agricultural environments
+such as greenhouses or open-field farms.
+
+Key Features:
+- Simulates readings for temperature, humidity, CO2, and PM2.5 levels.
+- Checks values against safe thresholds to detect environmental risks.
+- Logs real-time air quality data and raises warnings for out-of-range values.
+- Optional visualization using matplotlib (if installed).
+
+#import time
+import random
+import logging
+
+# Try importing matplotlib, if available
+try:
+    import matplotlib.pyplot as plt
+    has_matplotlib = True
+except ImportError:
+    has_matplotlib = False
+    print("matplotlib not found. Data will be monitored without visualization.")
+
+# Setup logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
+
+# Simulate air sensor readings
+def get_air_data():
+    return {
+        "temperature": round(random.uniform(18, 40), 1),  # °C
+        "humidity": round(random.uniform(30, 90), 1),     # %
+        "co2": round(random.uniform(300, 1000), 1),        # ppm
+        "pm25": round(random.uniform(5, 150), 1)           # ug/m3
+    }
+
+# Thresholds
+THRESHOLDS = {
+    "temperature": (20, 35),
+    "humidity": (40, 70),
+    "co2": (350, 800),
+    "pm25": (0, 50)
+}
+
+# Analyze sensor data and flag issues
+def analyze_data(data):
+    alerts = []
+    for key, value in data.items():
+        low, high = THRESHOLDS[key]
+        if not (low <= value <= high):
+            alerts.append(f"{key.upper()} out of range: {value}")
+    return alerts
+
+# Main monitoring loop
+def monitor_air(duration_seconds=60):
+    history = {"temperature": [], "humidity": [], "co2": [], "pm25": []}
+
+    start_time = time.time()
+    while time.time() - start_time < duration_seconds:
+        data = get_air_data()
+        alerts = analyze_data(data)
+
+        for key in history:
+            history[key].append(data[key])
+
+        logging.info(f"Air Data: {data}")
+        if alerts:
+            for alert in alerts:
+                logging.warning(alert)
+
+        time.sleep(2)
+
+    if has_matplotlib:
+        # Visualization
+        timestamps = list(range(0, len(history["temperature"]) * 2, 2))
+        for key, values in history.items():
+            plt.plot(timestamps, values, label=key)
+        plt.xlabel("Time (s)")
+        plt.ylabel("Value")
+        plt.title("Agriculture Air Monitoring")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+    else:
+        logging.info("Visualization skipped (matplotlib not installed).")
+
+if __name__ == "__main__":
+    logging.info("Starting Agriculture Air Monitoring System...")
+    monitor_air(30)  # Run for 30 seconds
+
+output:
+
+- Starting Agriculture Air Monitoring System...
+2025-05-05 09:29:08,631 - Air Data: {'temperature': 36.6, 'humidity': 76.8, 'co2': 377.5, 'pm25': 83.8}
+2025-05-05 09:29:08,631 - TEMPERATURE out of range: 36.6
+2025-05-05 09:29:08,631 - HUMIDITY out of range: 76.8
+2025-05-05 09:29:08,631 - PM25 out of range: 83.8
+2025-05-05 09:29:10,631 - Air Data: {'temperature': 32.4, 'humidity': 87.5, 'co2': 538.9, 'pm25': 44.0}
+2025-05-05 09:29:10,632 - HUMIDITY out of range: 87.5
+2025-05-05 09:29:12,632 - Air Data: {'temperature': 20.7, 'humidity': 74.7, 'co2': 729.5, 'pm25': 84.4}
+2025-05-05 09:29:12,632 - HUMIDITY out of range: 74.7
+2025-05-05 09:29:12,632 - PM25 out of range: 84.4
+
+
+key words in using temperature,humidity,pm25,air data
